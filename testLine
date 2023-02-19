@@ -1,3 +1,3 @@
 .IPPcode23
 DEFVAR GF@counter
-MOVE GF@counter string@ #Inicializace proměnné na prázdný řetězec
+MOVE GF@counter int@10

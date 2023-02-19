@@ -8,6 +8,29 @@ xmlwriter_set_indent($xw,1);
 
 xmlwriter_start_document($xw,'1.0','UTF-8');
 
+function itsVar($string){
+    
+    if(preg_match("/(LF|GF|TF)@[a-zA-Z_\-$%*!?][a-zA-Z_\-$%*!?0-9]*/",$string)){
+        //return mb_substr($string,3);
+        return true;
+    }
+    return false;
+}
+
+function itsLabel($string){
+    if(preg_match("/[a-zA-Z_\-$%*!?][a-zA-Z_\-$%*!?0-9]*/",$string)){
+        return true;
+    }
+    return false;
+}
+
+function printXmlElementType($typeName){
+    global $xw;
+    xmlwriter_start_attribute($xw,"type");
+    xmlwriter_text($xw,$typeName);
+    xmlwriter_end_attribute($xw);
+}
+
 $line = fgets(STDIN);
 $error = false;
 
@@ -41,10 +64,41 @@ while($line = fgets(STDIN)){
                 xmlwriter_start_element($xw,'arg'.($i+1));
                 switch($language[$splitLine[0]][$i]){
                     case ParamTypes::variable:
-                        echo "its variable\n";
+                        //echo "its variable\n";
+                        printXmlElementType("var");
+                        //its hodnota
+                        if(itsVar($splitLine[$i+1])){
+                            xmlwriter_text($xw,$splitLine[$i+1]);
+                        }
+                        else{
+                            $error = true;
+                        }
                         break;
                     case ParamTypes::symbol:
-                        echo "its symbol\n";
+                        if(preg_match("/^string@*/",$splitLine[$i+1])){
+                            echo "its STRIIIIIIIIIIING!";
+                        }
+                        elseif(preg_match("/^int@*/",$splitLine[$i+1])){
+                            if(preg_match("/[a-zA-Z]+/",($val = substr($splitLine[$i+1],4)))){
+                                $error = true;
+                            }
+                            elseif(intval($val,10)){
+                                printXmlElementType("int");
+                                //echo $val."\n";
+                                xmlwriter_text($xw,$val);
+                            }
+                            else
+                                $error = true;
+                        }
+                        elseif(preg_match("/^bool@*/",$splitLine[$i+1])){
+                            echo "TRUE FALSE TRUE FALSE";
+                        }
+                        elseif(preg_match("/^nil@*/",$splitLine[$i+1])){
+                            echo "its..... nothing?";
+                        }
+                        else{
+
+                        }
                         break;
                     case ParamTypes::label:
                         echo "its label\n";
@@ -52,13 +106,17 @@ while($line = fgets(STDIN)){
                     case ParamTypes::type:
                         echo "its type\n";
                         break;
+                    default:
+                        $error = true;
                 }
+
+                //end element 'argX'
                 xmlwriter_end_element($xw);
                     
             }
         }
         //end element 'instruction'
-        xmlwriter_end_element($xw,);
+        xmlwriter_end_element($xw);
     }
     else{
         echo "chyba!\n";
@@ -104,3 +162,5 @@ xmlwriter_end_document($xw);
 
 if(!$error)
     echo xmlwriter_output_memory($xw);
+else
+    echo "its shit!\n";

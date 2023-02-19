@@ -1,0 +1,5 @@
+<?php
+
+
+echo preg_match("/[a-zA-Z]+/","10a")."\n";
+//echo intval("10a",16)."\n";
