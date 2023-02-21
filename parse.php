@@ -91,6 +91,9 @@ while($line = fgets(STDIN)){
                                 $error = true;
                         }
                         elseif(preg_match("/^bool@*/",$splitLine[$i+1])){
+                            printXmlElementType("bool");
+                            $val = substr($splitLine[$i+1],5);
+                            xmlwriter_text($xw,$val);
                             //echo "TRUE FALSE TRUE FALSE";
                         }
                         elseif(preg_match("/^nil@*/",$splitLine[$i+1])){
