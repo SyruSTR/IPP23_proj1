@@ -76,7 +76,7 @@ while($line = fgets(STDIN)){
                         break;
                     case ParamTypes::symbol:
                         if(preg_match("/^string@*/",$splitLine[$i+1])){
-                            echo "its STRIIIIIIIIIIING!";
+                            //echo "its STRIIIIIIIIIIING!";
                         }
                         elseif(preg_match("/^int@*/",$splitLine[$i+1])){
                             if(preg_match("/[a-zA-Z]+/",($val = substr($splitLine[$i+1],4)))){
@@ -91,20 +91,20 @@ while($line = fgets(STDIN)){
                                 $error = true;
                         }
                         elseif(preg_match("/^bool@*/",$splitLine[$i+1])){
-                            echo "TRUE FALSE TRUE FALSE";
+                            //echo "TRUE FALSE TRUE FALSE";
                         }
                         elseif(preg_match("/^nil@*/",$splitLine[$i+1])){
-                            echo "its..... nothing?";
+                            //echo "its..... nothing?";
                         }
                         else{
 
                         }
                         break;
                     case ParamTypes::label:
-                        echo "its label\n";
+                        //echo "its label\n";
                         break;
                     case ParamTypes::type:
-                        echo "its type\n";
+                        //echo "its type\n";
                         break;
                     default:
                         $error = true;
@@ -119,7 +119,7 @@ while($line = fgets(STDIN)){
         xmlwriter_end_element($xw);
     }
     else{
-        echo "chyba!\n";
+        //echo "chyba!\n";
         $error = true;
         break;
     }
@@ -160,7 +160,10 @@ xmlwriter_end_element($xw);
 
 xmlwriter_end_document($xw);
 
-if(!$error)
+if(!$error){
     echo xmlwriter_output_memory($xw);
-else
-    echo "its shit!\n";
+    exit (0);
+}
+    
+// else
+//     echo "its shit!\n";
