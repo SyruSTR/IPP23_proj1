@@ -10,7 +10,7 @@ xmlwriter_start_document($xw,'1.0','UTF-8');
 
 function itsVar($string){
     
-    if(preg_match("/(LF|GF|TF)@[a-zA-Z_\-$%*!?][a-zA-Z_\-$%*!?0-9]*/",$string)){
+    if(preg_match("/(LF|GF|TF)@[a-zA-Z_\-&$%*!?][a-zA-Z_\-$&%*!?0-9]*/",$string)){
         //return mb_substr($string,3);
         return true;
     }
@@ -45,7 +45,7 @@ if ($line = ".IPPcode23")
 $order = 1;
 
 while($line = fgets(STDIN)){
-    $splitLine = explode(" ", trim($line, "\n"));
+    $splitLine = preg_split("/[\s]+/", trim($line, "\n"));
 
     if(array_key_exists($splitLine[0],$language)){
         xmlwriter_start_element($xw,'instruction');
@@ -58,25 +58,33 @@ while($line = fgets(STDIN)){
         xmlwriter_text($xw,strtoupper($splitLine[0]));
         xmlwriter_end_attribute($xw);
 
-        if(($atrCount = count($language[$splitLine[0]])) > 0){
+        if(isset($language[$splitLine[0]])){
+            $atrCount = count($language[$splitLine[0]]);
+            if($atrCount != count($splitLine)-1){
+                exit(23);
+            }
+            
+            
+
             for($i = 0; $i < $atrCount; $i++){
                 //echo ($language[$splitLine[0]][$i]->name)."\n";
                 xmlwriter_start_element($xw,'arg'.($i+1));
+                echo ($language[$splitLine[0]][$i]->name)."\n";
                 switch($language[$splitLine[0]][$i]){
                     case ParamTypes::variable:
                         //echo "its variable\n";
                         printXmlElementType("var");
-                        //its hodnota
                         if(itsVar($splitLine[$i+1])){
                             xmlwriter_text($xw,$splitLine[$i+1]);
                         }
                         else{
-                            $error = true;
+                            exit(23);
                         }
                         break;
                     case ParamTypes::symbol:
                         if(preg_match("/^string@*/",$splitLine[$i+1])){
-                            //echo "its STRIIIIIIIIIIING!";
+                            printXmlElementType("string");
+                            xmlwriter_text($xw,substr($splitLine[$i+1],7));
                         }
                         elseif(preg_match("/^int@*/",$splitLine[$i+1])){
                             if(preg_match("/[a-zA-Z]+/",($val = substr($splitLine[$i+1],4)))){
@@ -91,20 +99,31 @@ while($line = fgets(STDIN)){
                                 $error = true;
                         }
                         elseif(preg_match("/^bool@*/",$splitLine[$i+1])){
-                            printXmlElementType("bool");
                             $val = substr($splitLine[$i+1],5);
-                            xmlwriter_text($xw,$val);
+                            if(strcmp("true",$val) == 0 || strcmp("false",$val) == 0){
+                                printXmlElementType("bool");
+                                xmlwriter_text($xw,$val);
+                            }
+                            else
+                                exit(23);
+                            
                             //echo "TRUE FALSE TRUE FALSE";
                         }
                         elseif(preg_match("/^nil@*/",$splitLine[$i+1])){
                             //echo "its..... nothing?";
                         }
                         else{
-
+                            exit(23);
                         }
                         break;
                     case ParamTypes::label:
                         //echo "its label\n";
+                        if(preg_match("/^[a-zA-Z]+$/",$val = $splitLine[$i+1])){
+                            printXmlElementType("label");
+                            xmlwriter_text($xw,$val);
+                        }
+                        else
+                            exit(23);
                         break;
                     case ParamTypes::type:
                         //echo "its type\n";
@@ -118,6 +137,8 @@ while($line = fgets(STDIN)){
                     
             }
         }
+        elseif(count($splitLine)-1 > 0)
+            exit(23);
         //end element 'instruction'
         xmlwriter_end_element($xw);
     }
