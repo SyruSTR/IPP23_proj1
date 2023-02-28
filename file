@@ -1,2 +1,2 @@
 .IPPcode23
-ADD GF@var GF@var GF@var
+NOT GF@var GF@var

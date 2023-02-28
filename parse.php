@@ -24,11 +24,17 @@ function itsLabel($string){
     return false;
 }
 
-function printXmlElementType($typeName){
+function printXmlElement($typeName,$elementNumber,$text){
     global $xw;
+    xmlwriter_start_element($xw,'arg'.($elementNumber+1));
+
     xmlwriter_start_attribute($xw,"type");
     xmlwriter_text($xw,$typeName);
     xmlwriter_end_attribute($xw);
+
+    xmlwriter_text($xw,$text);
+    
+    xmlwriter_end_element($xw);
 }
 
 $line = fgets(STDIN);
@@ -67,73 +73,129 @@ while($line = fgets(STDIN)){
             
 
             for($i = 0; $i < $atrCount; $i++){
-                //echo ($language[$splitLine[0]][$i]->name)."\n";
-                xmlwriter_start_element($xw,'arg'.($i+1));
-                echo ($language[$splitLine[0]][$i]->name)."\n";
-                switch($language[$splitLine[0]][$i]){
-                    case ParamTypes::variable:
-                        //echo "its variable\n";
-                        printXmlElementType("var");
-                        if(itsVar($splitLine[$i+1])){
-                            xmlwriter_text($xw,$splitLine[$i+1]);
-                        }
-                        else{
-                            exit(23);
-                        }
-                        break;
-                    case ParamTypes::symbol:
-                        if(preg_match("/^string@*/",$splitLine[$i+1])){
-                            printXmlElementType("string");
-                            xmlwriter_text($xw,substr($splitLine[$i+1],7));
-                        }
-                        elseif(preg_match("/^int@*/",$splitLine[$i+1])){
-                            if(preg_match("/[a-zA-Z]+/",($val = substr($splitLine[$i+1],4)))){
-                                $error = true;
-                            }
-                            elseif(intval($val,10)){
-                                printXmlElementType("int");
-                                //echo $val."\n";
-                                xmlwriter_text($xw,$val);
-                            }
-                            else
-                                $error = true;
-                        }
-                        elseif(preg_match("/^bool@*/",$splitLine[$i+1])){
-                            $val = substr($splitLine[$i+1],5);
-                            if(strcmp("true",$val) == 0 || strcmp("false",$val) == 0){
-                                printXmlElementType("bool");
-                                xmlwriter_text($xw,$val);
-                            }
-                            else
-                                exit(23);
-                            
-                            //echo "TRUE FALSE TRUE FALSE";
-                        }
-                        elseif(preg_match("/^nil@*/",$splitLine[$i+1])){
-                            //echo "its..... nothing?";
-                        }
-                        else{
-                            exit(23);
-                        }
-                        break;
-                    case ParamTypes::label:
-                        //echo "its label\n";
-                        if(preg_match("/^[a-zA-Z]+$/",$val = $splitLine[$i+1])){
-                            printXmlElementType("label");
-                            xmlwriter_text($xw,$val);
-                        }
-                        else
-                            exit(23);
-                        break;
-                    case ParamTypes::type:
-                        //echo "its type\n";
-                        break;
-                    default:
-                        $error = true;
+                $manyOptions = false;
+                if(is_array($language[$splitLine[0]][$i])){
+                    $number_of_options = count($language[$splitLine[0]][$i]);
+                    $manyOptions = true;
+                }
+                else{
+                    $number_of_options = 1;
                 }
 
-                //end element 'argX'
-                xmlwriter_end_element($xw);
+                $j = 0;
+                $count_of_errors = 0;
+                while($j < $number_of_options){
+
+                    if($manyOptions){
+                        $checkedParam = $language[$splitLine[0]][$i][$j];
+                    }
+                    else{
+                        $checkedParam = $language[$splitLine[0]][$i];
+                    }
+                    
+
+                    //echo ($language[$splitLine[0]][$i]->name)."\n";
+                    
+                    switch($checkedParam){
+                        case ParamTypes::variable:
+                            //echo "its variable\n";
+                            
+                            if(itsVar($splitLine[$i+1])){
+                                printXmlElement(
+                                    "var",
+                                    $i,
+                                    $splitLine[$i+1]
+                                );
+                            }
+                            else{
+                                $count_of_errors++;
+                            }
+                            break;
+                        case ParamTypes::symbol:
+                            if(preg_match("/^string@*/",$splitLine[$i+1])){
+                                printXmlElement(
+                                    "string",
+                                    $i,
+                                    substr($splitLine[$i+1],7)
+                                );
+                            }
+                            elseif(preg_match("/^int@*/",$splitLine[$i+1])){
+                                if(preg_match("/[a-zA-Z]+/",($val = substr($splitLine[$i+1],4)))){
+                                    $count_of_errors++;
+                                }
+                                elseif(intval($val,10)){
+                                    printXmlElement(
+                                        "int",
+                                        $i,
+                                        $val
+                                    );
+                                }
+                                else
+                                    $count_of_errors++;
+                            }
+                            elseif(preg_match("/^bool@*/",$splitLine[$i+1])){
+                                $val = substr($splitLine[$i+1],5);
+                                if(strcmp("true",$val) == 0 || strcmp("false",$val) == 0){
+                                    printXmlElement(
+                                        "bool",
+                                        $i,
+                                        $val
+                                    );
+                                }
+                                else
+                                    $count_of_errors++;
+                                
+                            }
+                            elseif(preg_match("/^nil@nil/",$splitLine[$i+1])){
+                                //echo "its..... nothing?";
+                                $val = "nil";
+                                printXmlElement(
+                                    "nil",
+                                    $i,
+                                    $val
+                                );
+                            }
+                            else{
+                                $count_of_errors++;
+                            }
+                            break;
+                        case ParamTypes::label:
+                            //echo "its label\n";
+                            if(preg_match("/^[a-zA-Z]+$/",$splitLine[$i+1])){
+                                $val = $splitLine[$i+1];
+                                printXmlElement(
+                                    "label",
+                                    $i,
+                                    $val
+                                );
+                            }
+                            else
+                                $count_of_errors++;
+                            break;
+                        case ParamTypes::type:
+                            //echo "its type\n";
+
+                            if(preg_match("/^(int|string|bool)$/",$splitLine[$i+1])){
+                                $val = $splitLine[$i+1];
+                                printXmlElement(
+                                    "type",
+                                    $i,
+                                    $val
+                                );
+                            }
+                            else
+                                $count_of_errors++;
+                            break;
+                        default:
+                            $count_of_errors++;
+                    }
+                
+                    $j++;
+                }
+                if($count_of_errors == $j){
+                    exit(23);
+                }
+                
                     
             }
         }
@@ -149,37 +211,6 @@ while($line = fgets(STDIN)){
     }
 }
 
-// $xw = xmlwriter_open_memory();
-// xmlwriter_set_indent($xw,1);
-
-// xmlwriter_start_document($xw,'1.0','UTF-8');
-
-// // while($line = fgets(STDIN)){
-// //     echo($line);
-// // }
-// xmlwriter_start_element($xw, 'tag1');
-
-// // Атрибут 'att1' для элемента 'tag1'
-// xmlwriter_start_attribute($xw, 'att1');
-// xmlwriter_text($xw, 'valueofatt1');
-// xmlwriter_end_attribute($xw);
-
-// xmlwriter_write_comment($xw, 'this is a comment.');
-
-// // Создаём дочерний элемент
-// xmlwriter_start_element($xw, 'tag11');
-// xmlwriter_text($xw, 'This is a sample text, ä');
-// xmlwriter_end_element($xw); // tag11
-
-// xmlwriter_end_element($xw); // tag1
-
-
-
-// xmlwriter_start_pi($xw, 'php');
-// xmlwriter_text($xw, '$foo=2;echo $foo;');
-// xmlwriter_end_pi($xw);
-
-//element program
 xmlwriter_end_element($xw);
 
 xmlwriter_end_document($xw);
@@ -188,6 +219,3 @@ if(!$error){
     echo xmlwriter_output_memory($xw);
     exit (0);
 }
-    
-// else
-//     echo "its shit!\n";
