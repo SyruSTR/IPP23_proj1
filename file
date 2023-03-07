@@ -1,2 +1,2 @@
 .IPPcode23
-NOT GF@var GF@var
+MOVE GF@counter string@abc#abc

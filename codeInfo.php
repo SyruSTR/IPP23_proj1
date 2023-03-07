@@ -16,7 +16,7 @@ enum SymbolType{
 
 $language = array(
     //prace s pamci
-    "MOVE" => array(ParamTypes::variable,ParamTypes::symbol),
+    "MOVE" => array(ParamTypes::variable,array(ParamTypes::symbol,ParamTypes::variable)),
     "CREATEFRAME" => NULL,
     "PUSHFRAME" => NULL,
     "POPFRAME" => NULL,
@@ -24,7 +24,7 @@ $language = array(
     "CALL" => array(ParamTypes::label),
     "RETURN" => NULL,
     //
-    "PUSHS" => array(ParamTypes::symbol),
+    "PUSHS" => array(array(ParamTypes::symbol,ParamTypes::variable)),
     "POPS" => array(ParamTypes::variable),
 
     "ADD" => array(ParamTypes::variable,array(ParamTypes::symbol,ParamTypes::variable),array(ParamTypes::symbol,ParamTypes::variable)),
